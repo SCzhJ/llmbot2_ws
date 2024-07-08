@@ -20,6 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'owl_vit = object_tracker.owl_vit:main',
+            'query = object_tracker.query:main',
         ],
     },
 )
