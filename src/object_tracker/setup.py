@@ -22,6 +22,8 @@ setup(
         'console_scripts': [
             'owl_vit = object_tracker.owl_vit:main',
             'query = object_tracker.query:main',
+            'gdino = object_tracker.gdino:main',
+            'sam = object_tracker.sam:main',
         ],
     },
 )
