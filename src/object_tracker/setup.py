@@ -1,11 +1,12 @@
 from setuptools import find_packages, setup
 
 package_name = 'object_tracker'
+sobmodules=package_name+"/submodules"
 
 setup(
     name=package_name,
     version='0.0.0',
-    packages=find_packages(exclude=['test']),
+    packages=[package_name, sobmodules],
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
@@ -20,10 +21,11 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'owl_vit = object_tracker.owl_vit:main',
+            # 'owl_vit = object_tracker.owl_vit:main',
+            # 'gdino = object_tracker.gdino:main',
+            # 'sam = object_tracker.sam:main',
             'query = object_tracker.query:main',
-            'gdino = object_tracker.gdino:main',
-            'sam = object_tracker.sam:main',
+            'deTrack = object_tracker.deTrack:main',
         ],
     },
 )

@@ -23,7 +23,10 @@ class SAM:
             box=box[None, :],
             multimask_output=False,
         )
-        return masks[0].astype(np.uint8) * 255
+        #in masks [0] if false 0, true 255
+
+        mask = masks[0].astype(np.uint8)
+        return mask
     
 
 def main():
@@ -31,9 +34,12 @@ def main():
     image = cv2.imread("/home/fyp/image.jpg")
     box = np.array([693, 357, 858, 516])
     mask = sam.predict_from_boxes(image, box)
+    mask = np.array(mask)
+    print(np.unique(mask))
     print(mask.shape) # the shape is (1,720,1280)
     cv2.imshow("mask", mask)
     cv2.waitKey(0)
+    cv2.imwrite("/home/fyp/mask.jpg", mask)
 
 
 if __name__ == '__main__':
