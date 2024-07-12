@@ -33,7 +33,7 @@ def main():
     sam = SAM()
     image = cv2.imread("/home/fyp/image.jpg")
     box = np.array([693, 357, 858, 516])
-    mask = sam.predict_from_boxes(image, box)
+    mask = sam.predict_from_boxes(image, box)*255
     mask = np.array(mask)
     print(np.unique(mask))
     print(mask.shape) # the shape is (1,720,1280)

@@ -8,13 +8,16 @@ class TextPublisher(Node):
         self.publisher_ = self.create_publisher(String, 'text_topic', 10)
         timer_period = 0.5  # seconds (adjust as needed)
         self.timer = self.create_timer(timer_period, self.timer_callback)
+        self.input_text = ""
 
     def timer_callback(self):
         msg = String()
-        input_text = input("Enter text to publish: ")
-        msg.data = f"{input_text}"
+        print("\033[H\033[J", end="")
+        print(f"Inputed Query: {self.input_text}\n")
+        self.input_text = input("Enter new query: ")
+        msg.data = f"{self.input_text}"
         self.publisher_.publish(msg)
-        self.get_logger().info(f"Publishing: '{msg.data}'")
+        # self.get_logger().info(f"Publishing: '{msg.data}'")
 
 def main(args=None):
     rclpy.init(args=args)

@@ -58,9 +58,9 @@ class XMemTrack:
         return processor, prediction
 
     def track(self, processor, frame):
-        with torch.cuda.amp.autocast(enabled=True):
-            frame_torch, _ = image_to_torch(frame, device=self.device)
-            prediction = processor.step(frame_torch)
-            prediction = torch_prob_to_numpy_mask(prediction)
-            print("inferencing")
+        # need the following line for the while loop
+        # with torch.cuda.amp.autocast(enabled=True):
+        frame_torch, _ = image_to_torch(frame, device=self.device)
+        prediction = processor.step(frame_torch)
+        prediction = torch_prob_to_numpy_mask(prediction)
         return processor, prediction

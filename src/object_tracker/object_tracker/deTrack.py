@@ -1,5 +1,6 @@
 
 import rclpy
+import rclpy.logging
 from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor
 from sensor_msgs.msg import Image
@@ -44,16 +45,18 @@ def main(args=None):
                 results = owlvit.predict(image, text_subscriber.text)
 
                 box, score, label = owlvit.get_best_box(results)
+                if box is None:
+                    rclpy.logging.get_logger("object_tracker").info("No object detected")
+                    continue
                 mask = sam.predict_from_boxes(image_subscriber.cv_image, np.array(box))
                 processor, prediction = xmem.initialize(1, mask, image_subscriber.cv_image)
-                while rclpy.ok() and not text_subscriber.entering:
-                    executor.spin_once(timeout_sec=0.05)
-                    processor, prediction = xmem.track(processor, image_subscriber.cv_image)
-                    print(prediction.shape)
-                    # use cv2 to visualize the mask
-                    cv2.imshow("mask", prediction*200)
-                    cv2.waitKey(100)
-                    time.sleep(0.1)
+                with torch.cuda.amp.autocast(enabled=True):
+                    while rclpy.ok() and not text_subscriber.entering:
+                        executor.spin_once(timeout_sec=0.05)
+                        processor, prediction = xmem.track(processor, image_subscriber.cv_image)
+                        cv2.imshow("mask", prediction*200)
+                        cv2.waitKey(80)
+                        time.sleep(0.1)
 
             time.sleep(0.1)
 
