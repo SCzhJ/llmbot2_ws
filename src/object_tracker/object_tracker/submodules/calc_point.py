@@ -10,16 +10,19 @@ import tf_transformations
 from geometry_msgs.msg import TransformStamped, Quaternion
 
 class RealSensePointCalculator(Node):
-	def __init__(self):
+	def __init__(self, frame_size = [720, 1280], focal_scaler = 0.7, depth_scaler = 1.0):
 		super().__init__('realsense_point_calculator')
 		self.bridge = CvBridge()
-		self.depth_sub = self.create_subscription(Image, '/camera/camera/depth/image_rect_raw', self.depth_callback, 10)
+		self.depth_sub = self.create_subscription(Image, '/camera/camera/aligned_depth_to_color/image_raw', self.depth_callback, 10)
 		self.color_sub = self.create_subscription(Image, '/camera/camera/color/image_raw', self.color_callback, 10)
 		self.info_sub = self.create_subscription(CameraInfo, '/camera/camera/depth/camera_info', self.info_callback, 10)
 		self.depth_image = None
 		self.color_image = None
 		self.intrinsics = None
 		self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
+		self.frame_size = frame_size
+		self.focal_scaler = focal_scaler
+		self.depth_scaler = depth_scaler
 
 	def depth_callback(self, msg):
 		self.depth_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
@@ -34,16 +37,18 @@ class RealSensePointCalculator(Node):
 			self.intrinsics.height = msg.height
 			self.intrinsics.ppx = msg.k[2]
 			self.intrinsics.ppy = msg.k[5]
-			self.intrinsics.fx = msg.k[0]
-			self.intrinsics.fy = msg.k[4]
+			self.intrinsics.fx = msg.k[0]/self.focal_scaler
+			self.intrinsics.fy = msg.k[4]/self.focal_scaler
 			self.intrinsics.model = rs.distortion.none
 			self.intrinsics.coeffs = [i for i in msg.d]
 
 	def calculate_point(self, pixel_y, pixel_x):
 		if self.depth_image is None or self.intrinsics is None:
 			return None
-
-		depth = self.depth_image[pixel_y, pixel_x] * 0.001  # Convert from mm to meters
+		
+		depth_pixel_y = int((pixel_y - self.frame_size[0] // 2)/self.depth_scaler + self.frame_size[0] // 2)
+		depth_pixel_x = int((pixel_x - self.frame_size[1] // 2)/self.depth_scaler + self.frame_size[1] // 2)
+		depth = self.depth_image[depth_pixel_y, depth_pixel_x] * 0.001  # Convert from mm to meters
 		point = rs.rs2_deproject_pixel_to_point(self.intrinsics, [pixel_x, pixel_y], depth)
 		point = [point[2], -point[0], -point[1]]
 		return point
