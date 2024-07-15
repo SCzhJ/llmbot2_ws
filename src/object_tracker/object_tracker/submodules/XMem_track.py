@@ -29,7 +29,7 @@ import numpy as np
 torch.set_grad_enabled(False)
 
 class XMemTrack:
-    def __init__(self):
+    def __init__(self, frame_size=[720, 1280]):
         # default configuration
         self.config = {
             'top_k': 30,
@@ -44,6 +44,7 @@ class XMemTrack:
         }
         self.device = 'cuda'
         self.network = XMem(self.config, '/home/fyp/XMem/saves/XMem.pth').eval().to(device)
+        self.frame_size = frame_size
 
     def initialize(self, num_objects,mask,frame):
         torch.cuda.empty_cache()
@@ -64,3 +65,20 @@ class XMemTrack:
         prediction = processor.step(frame_torch)
         prediction = torch_prob_to_numpy_mask(prediction)
         return processor, prediction
+    
+    def center_of_mask(self, prediction):
+        binary_mask = prediction > 0
+        if binary_mask.sum() == 0:
+            print("No valid pixels found in the mask.")
+            return None
+        coords = np.column_stack(np.where(binary_mask))
+        center = coords.mean(axis=0)
+        center_pixel = tuple(center.astype(int))
+        if center_pixel[0] < 0 or center_pixel[1] < 0 or center_pixel[0] > self.frame_size[0] or center_pixel[1] > self.frame_size[1]:
+            print("Center pixel out of frame.")
+            print(center_pixel)
+            # write binary_mask to a file
+            print(binary_mask.shape)
+            cv2.imwrite("~/mask.jpg", binary_mask.astype(np.uint8)*255)
+            return None
+        return center_pixel
